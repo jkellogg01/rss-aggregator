@@ -32,6 +32,7 @@ func main() {
 	cfg := apiConfig{DB: dbQueries}
 
 	mux := http.NewServeMux()
+    logMux := middlewareLogging(mux)
     
 	mux.HandleFunc("GET /v1/healthz", func(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, 200, map[string]string{
@@ -45,10 +46,12 @@ func main() {
 
 	mux.HandleFunc("POST /v1/users", cfg.handleCreateUser)
     mux.HandleFunc("GET /v1/users", cfg.middlewareAuth(cfg.handleGetUser))
+    mux.HandleFunc("POST /v1/feeds", cfg.middlewareAuth(cfg.handleCreateFeed))
+    mux.HandleFunc("GET /v1/feeds", cfg.handleGetFeeds)
 
 	app := http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
-		Handler: mux,
+		Handler: logMux,
 	}
 
 	err = app.ListenAndServe()
